@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task 3 - Lead Capture Form</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #1557b0;
+            --success: #34a853;
+            --bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --text: #1a1a1a;
+            --text-secondary: #5f6368;
+            --border: #dadce0;
+            --error: #ea4335;
+            --shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .nav-back {
+            display: inline-block;
+            padding: 1rem 2rem;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .nav-back:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 2rem 3rem;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+
+        /* Video container */
+        .video-container {
+            position: relative;
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .video-wrapper {
+            position: relative;
+            aspect-ratio: 16/9;
+            background: #000;
+        }
+
+        .video-wrapper iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        /* Timer badge */
+        .timer-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.75);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .timer-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Progress ring */
+        .progress-ring {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            width: 36px;
+            height: 36px;
+            z-index: 10;
+        }
+
+        .progress-ring circle {
+            fill: none;
+            stroke-width: 3;
+        }
+
+        .progress-ring .bg {
+            stroke: rgba(255,255,255,0.25);
+        }
+
+        .progress-ring .progress {
+            stroke: var(--primary);
+            stroke-linecap: round;
+            transform: rotate(-90deg);
+            transform-origin: center;
+            transition: stroke-dashoffset 0.1s linear;
+        }
+
+        /* FORM OVERLAY - Fixed visibility */
+        .form-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.88);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+            z-index: 50;
+            padding: 1rem;
+        }
+
+        .form-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Lead form - Fixed contrast */
+        .lead-form {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 420px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-header h2 {
+            font-size: 1.3rem;
+            margin-bottom: 0.4rem;
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .form-header p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.35rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.65rem 0.9rem;
+            border: 1.5px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            color: var(--text);
+            background: #fff;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input::placeholder {
+            color: #aaa;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
+        }
+
+        .form-group input.error,
+        .form-group select.error {
+            border-color: var(--error);
+        }
+
+        .error-message {
+            color: var(--error);
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            display: none;
+            font-weight: 500;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            margin-bottom: 1.25rem;
+            margin-top: 0.5rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin-top: 2px;
+            accent-color: var(--primary);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .checkbox-group label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            cursor: pointer;
+        }
+
+        .checkbox-group a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .checkbox-group a:hover {
+            text-decoration: underline;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-submit:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-submit:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Close button */
+        .btn-close {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            z-index: 60;
+        }
+
+        .btn-close:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        /* Success state */
+        .success-state {
+            text-align: center;
+            padding: 1.5rem 0;
+            display: none;
+        }
+
+        .success-state.show {
+            display: block;
+            animation: successPop 0.4s ease;
+        }
+
+        @keyframes successPop {
+            0% { transform: scale(0.85); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .success-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--success);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .success-state h2 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .success-state p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Resume bar */
+        .resume-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+            padding: 2.5rem 1rem 1rem;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 15;
+        }
+
+        .resume-bar.show {
+            transform: translateY(0);
+        }
+
+        .resume-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.25rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0 auto;
+            font-size: 0.9rem;
+        }
+
+        /* Shake animation */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-8px); }
+            80% { transform: translateX(8px); }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 0 1rem 2rem;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .lead-form {
+                padding: 1.5rem;
+                max-height: 85vh;
+            }
+            
+            .form-header h2 {
+                font-size: 1.15rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="nav-back">← Back to Home</a>
+    
+    <div class="container">
+        <h1>Lead Capture Video Experience</h1>
+
+        <div class="video-container">
+            <div class="video-wrapper" id="videoWrapper">
+                <iframe 
+                    id="youtubePlayer"
+                    src="https://www.youtube.com/embed/RJTCAL1DRro?enablejsapi=1" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+                </iframe>
+                
+                <!-- Progress Ring -->
+                <svg class="progress-ring" viewBox="0 0 36 36">
+                    <circle class="bg" cx="18" cy="18" r="14"></circle>
+                    <circle class="progress" cx="18" cy="18" r="14" 
+                        stroke-dasharray="87.96" 
+                        stroke-dashoffset="87.96"
+                        id="progressCircle"></circle>
+                </svg>
+                
+                <!-- Timer Badge -->
+                <div class="timer-badge" id="timerBadge">
+                    <span id="timerText">Form in: 6s</span>
+                </div>
+
+                <!-- Form Overlay -->
+                <div class="form-overlay" id="formOverlay">
+                    <button class="btn-close" id="closeBtn" title="Close and continue watching">✕</button>
+                    
+                    <form class="lead-form" id="leadForm">
+                        <!-- Form State -->
+                        <div id="formState">
+                            <div class="form-header">
+                                <h2>🎯 Exclusive Offer Inside!</h2>
+                                <p>Complete this form to unlock premium content and special discounts.</p>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="firstName">First Name *</label>
+                                    <input type="text" id="firstName" name="firstName" placeholder="John">
+                                    <span class="error-message">First name is required</span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="lastName">Last Name *</label>
+                                    <input type="text" id="lastName" name="lastName" placeholder="Doe">
+                                    <span class="error-message">Last name is required</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">Email Address *</label>
+                                <input type="email" id="email" name="email" placeholder="john@example.com">
+                                <span class="error-message">Valid email is required</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="phone">Phone Number *</label>
+                                <input type="tel" id="phone" name="phone" placeholder="+1 (555) 000-0000">
+                                <span class="error-message">Valid phone number is required</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="company">Company (Optional)</label>
+                                <input type="text" id="company" name="company" placeholder="Your company">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="interest">I'm interested in *</label>
+                                <select id="interest" name="interest">
+                                    <option value="">Select an option</option>
+                                    <option value="product">Product Demo</option>
+                                    <option value="service">Services</option>
+                                    <option value="partnership">Partnership</option>
+                                    <option value="other">Other</option>
+                                </select>
+                                <span class="error-message">Please select an interest</span>
+                            </div>
+
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="consent" name="consent">
+                                <label for="consent">
+                                    I agree to receive marketing communications and accept the 
+                                    <a href="#">Privacy Policy</a> and <a href="#">Terms of Service</a>.
+                                </label>
+                            </div>
+
+                            <button type="submit" class="btn-submit" id="submitBtn">
+                                Unlock Premium Content →
+                            </button>
+                        </div>
+
+                        <!-- Success State -->
+                        <div class="success-state" id="successState">
+                            <div class="success-icon">✓</div>
+                            <h2>Thank You!</h2>
+                            <p>Your information has been submitted successfully. Enjoy the video!</p>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Resume Bar -->
+                <div class="resume-bar" id="resumeBar">
+                    <button class="resume-btn" id="resumeBtn">
+                        ▶ Resume Watching
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        
+
+        (function() {
+            'use strict';
+
+            const CONFIG = {
+                TRIGGER_TIME: 6,
+                CIRCLE_CIRCUMFERENCE: 87.96, // 2 * PI * 14
+                VIDEO_ID: 'RJTCAL1DRro'
+            };
+
+            let elapsedTime = 0;
+            let isPlaying = false;
+            let formShown = false;
+            let formSubmitted = false;
+            let timerInterval = null;
+            let videoSrc = '';
+
+            const player = document.getElementById('youtubePlayer');
+            const formOverlay = document.getElementById('formOverlay');
+            const closeBtn = document.getElementById('closeBtn');
+            const leadForm = document.getElementById('leadForm');
+            const timerText = document.getElementById('timerText');
+            const progressCircle = document.getElementById('progressCircle');
+            const resumeBar = document.getElementById('resumeBar');
+            const resumeBtn = document.getElementById('resumeBtn');
+            const submitBtn = document.getElementById('submitBtn');
+            const successState = document.getElementById('successState');
+            const formState = document.getElementById('formState');
+
+            function init() {
+                videoSrc = player.src;
+                startTracking();
+                setupEventListeners();
+            }
+
+            function startTracking() {
+                timerInterval = setInterval(() => {
+                    if (isPlaying && !formShown && !formSubmitted) {
+                        elapsedTime += 0.1;
+                        updateProgressUI();
+                        
+                        if (elapsedTime >= CONFIG.TRIGGER_TIME) {
+                            showForm();
+                        }
+                    }
+                }, 100);
+            }
+
+            function updateProgressUI() {
+                const remaining = Math.max(0, CONFIG.TRIGGER_TIME - Math.floor(elapsedTime));
+                const progress = Math.min(elapsedTime / CONFIG.TRIGGER_TIME, 1);
+                
+                timerText.textContent = `Form in: ${remaining}s`;
+                
+                const offset = CONFIG.CIRCLE_CIRCUMFERENCE - (progress * CONFIG.CIRCLE_CIRCUMFERENCE);
+                progressCircle.style.strokeDashoffset = offset;
+                
+                if (remaining <= 2) {
+                    progressCircle.style.stroke = '#ea4335';
+                }
+            }
+
+            function showForm() {
+                formShown = true;
+                player.src = '';
+                
+                formOverlay.classList.add('show');
+                
+                document.getElementById('timerBadge').style.opacity = '0';
+                document.querySelector('.progress-ring').style.opacity = '0';
+            }
+
+            function hideForm() {
+                formOverlay.classList.remove('show');
+                player.src = videoSrc;
+                isPlaying = true;
+                
+                resumeBar.classList.add('show');
+                setTimeout(() => {
+                    resumeBar.classList.remove('show');
+                }, 3000);
+            }
+
+            function validateForm() {
+                let isValid = true;
+                
+                const firstName = document.getElementById('firstName');
+                if (!firstName.value.trim()) {
+                    showError(firstName, 'First name is required');
+                    isValid = false;
+                } else {
+                    clearError(firstName);
+                }
+                
+                const lastName = document.getElementById('lastName');
+                if (!lastName.value.trim()) {
+                    showError(lastName, 'Last name is required');
+                    isValid = false;
+                } else {
+                    clearError(lastName);
+                }
+                
+                const email = document.getElementById('email');
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email.value)) {
+                    showError(email, 'Valid email is required');
+                    isValid = false;
+                } else {
+                    clearError(email);
+                }
+                
+                const phone = document.getElementById('phone');
+                const phoneRegex = /^[\d\s\-\+\(\)]+$/;
+                if (!phoneRegex.test(phone.value) || phone.value.length < 10) {
+                    showError(phone, 'Valid phone number is required');
+                    isValid = false;
+                } else {
+                    clearError(phone);
+                }
+                
+                const interest = document.getElementById('interest');
+                if (!interest.value) {
+                    showError(interest, 'Please select an interest');
+                    isValid = false;
+                } else {
+                    clearError(interest);
+                }
+                
+                return isValid;
+            }
+
+            function showError(input, message) {
+                input.classList.add('error');
+                const errorEl = input.parentElement.querySelector('.error-message');
+                if (errorEl) {
+                    errorEl.textContent = message;
+                    errorEl.classList.add('show');
+                }
+            }
+
+            function clearError(input) {
+                input.classList.remove('error');
+                const errorEl = input.parentElement.querySelector('.error-message');
+                if (errorEl) {
+                    errorEl.classList.remove('show');
+                }
+            }
+
+            function handleSubmit(e) {
+                e.preventDefault();
+                
+                if (!validateForm()) {
+                    leadForm.style.animation = 'none';
+                    setTimeout(() => {
+                        leadForm.style.animation = 'shake 0.5s ease';
+                    }, 10);
+                    return;
+                }
+                
+                const formData = {
+                    firstName: document.getElementById('firstName').value,
+                    lastName: document.getElementById('lastName').value,
+                    email: document.getElementById('email').value,
+                    phone: document.getElementById('phone').value,
+                    company: document.getElementById('company').value,
+                    interest: document.getElementById('interest').value,
+                    consent: document.getElementById('consent').checked,
+                    videoId: CONFIG.VIDEO_ID,
+                    watchTime: elapsedTime.toFixed(1),
+                    timestamp: new Date().toISOString()
+                };
+                
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Submitting...';
+                
+                setTimeout(() => {
+                    console.log('Lead captured:', formData);
+                    
+                    formSubmitted = true;
+                    formState.style.display = 'none';
+                    successState.classList.add('show');
+                    
+                    setTimeout(() => {
+                        hideForm();
+                    }, 2000);
+                    
+                }, 1500);
+            }
+
+            function setupEventListeners() {
+                leadForm.addEventListener('submit', handleSubmit);
+                closeBtn.addEventListener('click', hideForm);
+                resumeBtn.addEventListener('click', () => {
+                    resumeBar.classList.remove('show');
+                });
+                
+                document.querySelectorAll('input, select').forEach(input => {
+                    input.addEventListener('input', () => clearError(input));
+                });
+                
+                // Auto-start for demo
+                isPlaying = true;
+            }
+
+            init();
+
+        })();
+    </script>
+</body>
+</html>

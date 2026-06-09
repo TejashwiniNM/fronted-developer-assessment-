@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task 1 - Exclusive Privileges</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --orange: #e8590a;
+            --dark: #2d3436;
+            --gray: #636e72;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #faf5ee;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        .nav-back {
+            align-self: flex-start;
+            margin-bottom: 2rem;
+            text-decoration: none;
+            color: var(--orange);
+            font-weight: 600;
+            transition: opacity 0.3s;
+        }
+
+        .nav-back:hover {
+            opacity: 0.7;
+        }
+
+        /*
+         * SECTION WRAPPER
+         * Warm textured beige background matching original ICICI page.
+         * Repeating linear gradients create woven/linen texture.
+         */
+        .section-wrapper {
+            width: 100%;
+            max-width: 1100px;
+            background-color: #f0e3cc;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 5px, rgba(180,145,100,0.10) 5px, rgba(180,145,100,0.10) 6px),
+                repeating-linear-gradient(90deg, transparent, transparent 5px, rgba(180,145,100,0.10) 5px, rgba(180,145,100,0.10) 6px);
+            border-radius: 18px;
+            padding: 2.5rem 1rem 2.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* TITLE — italic orange matching original */
+        .section-title {
+            font-size: 2rem;
+            color: var(--orange);
+            font-weight: 700;
+            font-style: italic;
+            margin-bottom: 2.5rem;
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
+
+        /* CAROUSEL CONTAINER — perspective gives 3D depth to rotateY */
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            max-width: 1000px;
+            height: 320px;
+            perspective: 1200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .carousel-track {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /*
+         * BASE CARD
+         * White card with subtle dot pattern — matches faint texture on original cards.
+         */
+        .privilege-card {
+            position: absolute;
+            width: 280px;
+            height: 255px;
+            background-color: #ffffff;
+            background-image:
+                radial-gradient(circle, rgba(160,160,160,0.20) 1.2px, transparent 1.2px),
+                radial-gradient(circle, rgba(160,160,160,0.12) 1.2px, transparent 1.2px);
+            background-size: 20px 20px, 40px 40px;
+            background-position: 0 0, 10px 10px;
+            border-radius: 18px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            text-align: center;
+            /* GPU-accelerated transition via transform */
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            will-change: transform, opacity;
+        }
+
+        /*
+         * CARD STATES
+         * .active  → centre, full scale, face-on
+         * .prev    → left card: shifted left + rotateY(+22deg)
+         * .next    → right card: shifted right + rotateY(-22deg)
+         * .hidden  → invisible
+         *
+         * Why rotateY with perspective?
+         * Creates physical 3D turning effect matching original coverflow design.
+         */
+        .privilege-card.active {
+            transform: translateX(0) scale(1.08) rotateY(0deg);
+            z-index: 10;
+            opacity: 1;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.18);
+        }
+
+        .privilege-card.prev {
+            transform: translateX(-330px) scale(0.83) rotateY(22deg);
+            z-index: 5;
+            opacity: 0.85;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+        }
+
+        .privilege-card.next {
+            transform: translateX(330px) scale(0.83) rotateY(-22deg);
+            z-index: 5;
+            opacity: 0.85;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+        }
+
+        .privilege-card.hidden {
+            transform: translateX(0) scale(0.4);
+            opacity: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .privilege-card.active:hover {
+            transform: translateX(0) scale(1.11) rotateY(0deg);
+            box-shadow: 0 22px 56px rgba(232,89,10,0.18);
+        }
+
+        .privilege-card:not(.active):hover {
+            box-shadow: 0 12px 32px rgba(0,0,0,0.14);
+        }
+
+        /* CARD CONTENT TYPOGRAPHY */
+        .card-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--orange);
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+        }
+
+        .card-body {
+            font-size: 0.82rem;
+            color: var(--dark);
+            line-height: 1.45;
+            margin-bottom: 0.15rem;
+        }
+
+        .card-big {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: var(--orange);
+            line-height: 1.2;
+            margin-bottom: 0.15rem;
+        }
+
+        .card-sub {
+            font-size: 0.78rem;
+            color: var(--gray);
+            margin-bottom: 0.15rem;
+        }
+
+        /* Logo area — pushed to bottom with margin-top:auto */
+        .card-logo-area {
+            margin-top: auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /*
+         * BOOKMYSHOW LOGO (Pure CSS)
+         * "book" thin + red circle with "my" + "show" bold red
+         */
+        .bms-logo {
+            display: inline-flex;
+            align-items: center;
+            line-height: 1;
+            gap: 0;
+        }
+
+        .bms-book {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #222;
+            font-family: Arial, sans-serif;
+        }
+
+        .bms-circle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            background: #c4242b;
+            border-radius: 50%;
+            margin: 0 1px;
+        }
+
+        .bms-circle-text {
+            font-size: 0.72rem;
+            font-weight: 900;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            line-height: 1;
+        }
+
+        .bms-show {
+            font-size: 1rem;
+            font-weight: 900;
+            color: #c4242b;
+            font-family: Arial, sans-serif;
+        }
+
+        .bms-disclaimer {
+            font-size: 0.52rem;
+            color: #bbb;
+            margin-top: 0.3rem;
+            text-align: center;
+        }
+
+        /*
+         * IXIGO BADGE (Pure CSS)
+         * White italic text on blue rounded rectangle
+         */
+        .ixigo-badge {
+            display: inline-block;
+            background: #0090da;
+            color: #fff;
+            font-weight: 800;
+            font-size: 0.95rem;
+            font-style: italic;
+            padding: 0.28rem 1rem;
+            border-radius: 7px;
+            letter-spacing: 0.5px;
+        }
+
+        /* NAVIGATION ARROWS */
+        .nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            font-size: 2.2rem;
+            color: #999;
+            cursor: pointer;
+            z-index: 20;
+            padding: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s, transform 0.2s;
+            line-height: 1;
+        }
+
+        .nav-arrow:hover {
+            color: var(--orange);
+            transform: translateY(-50%) scale(1.15);
+        }
+
+        .nav-arrow.prev-btn {
+            left: 0;
+        }
+
+        .nav-arrow.next-btn {
+            right: 0;
+        }
+
+        /* DOT INDICATORS */
+        .dots-container {
+            display: flex;
+            gap: 0.45rem;
+            margin-top: 1.8rem;
+        }
+
+        .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #ccc;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .dot.active {
+            background: var(--orange);
+            width: 26px;
+            border-radius: 5px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .privilege-card {
+                width: 250px;
+                height: 235px;
+            }
+
+            .privilege-card.prev {
+                transform: translateX(-270px) scale(0.80) rotateY(20deg);
+            }
+
+            .privilege-card.next {
+                transform: translateX(270px) scale(0.80) rotateY(-20deg);
+            }
+        }
+
+        @media (max-width: 680px) {
+            .carousel-container {
+                height: 280px;
+            }
+
+            .privilege-card {
+                width: 220px;
+                height: 210px;
+                padding: 1.1rem;
+            }
+
+            .privilege-card.prev {
+                transform: translateX(-178px) scale(0.76) rotateY(18deg);
+                opacity: 0.6;
+            }
+
+            .privilege-card.next {
+                transform: translateX(178px) scale(0.76) rotateY(-18deg);
+                opacity: 0.6;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 440px) {
+            .privilege-card.prev,
+            .privilege-card.next {
+                display: none;
+            }
+
+            .privilege-card.active {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <a href="../index.html" class="nav-back">← Back to Home</a>
+
+    <div class="section-wrapper">
+
+        <h1 class="section-title">Exclusive Privileges</h1>
+
+        <div class="carousel-container">
+
+            <button class="nav-arrow prev-btn" aria-label="Previous card">‹</button>
+
+            <div class="carousel-track">
+
+                <!-- CARD 1: BookMyShow -->
+                <div class="privilege-card" data-index="0">
+                    <span class="card-label">ENJOY BENEFITS</span>
+                    <p class="card-body">worth up to</p>
+                    <p class="card-big">₹500/- off*</p>
+                    <p class="card-body">on your tickets.</p>
+
+                    <div class="card-logo-area">
+                        <div class="bms-logo">
+                            <span class="bms-book">book</span>
+                            <span class="bms-circle">
+                                <span class="bms-circle-text">my</span>
+                            </span>
+                            <span class="bms-show">show</span>
+                        </div>
+                        <small class="bms-disclaimer">*available on selected cards</small>
+                    </div>
+                </div>
+
+                <!-- CARD 2: Apple Offer (CENTRE — active by default) -->
+                <div class="privilege-card active" data-index="1">
+                    <span class="card-label">Avail</span>
+                    <p class="card-big" style="font-size:1.5rem;">APPLE OFFER</p>
+                    <p class="card-sub">with up to</p>
+                    <p class="card-big">₹7,000/- off</p>
+                </div>
+
+                <!-- CARD 3: Ixigo -->
+                <div class="privilege-card" data-index="2">
+                    <span class="card-label">Get</span>
+                    <p class="card-big">ACTIVATION VOUCHER</p>
+                    <p class="card-sub">with</p>
+                    <p class="card-body">Flat ₹1,200/- off.</p>
+
+                    <div class="card-logo-area">
+                        <div class="ixigo-badge">ixigo</div>
+                    </div>
+                </div>
+
+            </div><!-- /.carousel-track -->
+
+            <button class="nav-arrow next-btn" aria-label="Next card">›</button>
+
+        </div><!-- /.carousel-container -->
+
+        <div class="dots-container">
+            <div class="dot" data-index="0"></div>
+            <div class="dot active" data-index="1"></div>
+            <div class="dot" data-index="2"></div>
+        </div>
+
+    </div><!-- /.section-wrapper -->
+
+    <script>
+        /**
+         * Task 1: Exclusive Privileges Carousel
+         *
+         * WHY CSS 3D TRANSFORMS (rotateY + perspective)?
+         *   GPU-accelerated — smoother than JS animation loops.
+         *   rotateY creates the "angled/slanted" look on side cards
+         *   exactly as shown in the assignment image.
+         *
+         * WHY CLASS-BASED STATE (.active / .prev / .next / .hidden)?
+         *   All animation lives in CSS; JS only toggles class names.
+         *   Clean separation of logic and presentation.
+         *
+         * WHY IIFE + 'use strict'?
+         *   Avoids polluting global scope — production-ready pattern.
+         *
+         * WHY isAnimating FLAG?
+         *   Prevents rapid clicks from breaking transitions mid-way.
+         */
+
+        (function () {
+            'use strict';
+
+            const cards = document.querySelectorAll('.privilege-card');
+            const prevBtn = document.querySelector('.prev-btn');
+            const nextBtn = document.querySelector('.next-btn');
+            const dots = document.querySelectorAll('.dot');
+            const total = cards.length;
+
+            let current = 1;      // Apple Offer (index 1) starts as active
+            let isAnimating = false;
+
+            function updateCarousel(newIndex) {
+                if (newIndex < 0) {
+                    current = total - 1;
+                } else if (newIndex >= total) {
+                    current = 0;
+                } else {
+                    current = newIndex;
+                }
+
+                cards.forEach(function (card, i) {
+                    card.classList.remove('active', 'prev', 'next', 'hidden');
+
+                    const diff = i - current;
+
+                    if (diff === 0) {
+                        card.classList.add('active');
+                    } else if (diff === -1 || (current === 0 && i === total - 1)) {
+                        card.classList.add('prev');
+                    } else if (diff === 1 || (current === total - 1 && i === 0)) {
+                        card.classList.add('next');
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+
+                dots.forEach(function (dot, i) {
+                    dot.classList.toggle('active', i === current);
+                });
+            }
+
+            function navigate(direction) {
+                if (isAnimating) return;
+                isAnimating = true;
+                updateCarousel(current + direction);
+                setTimeout(function () {
+                    isAnimating = false;
+                }, 600);
+            }
+
+            prevBtn.addEventListener('click', function () {
+                navigate(-1);
+            });
+
+            nextBtn.addEventListener('click', function () {
+                navigate(1);
+            });
+
+            dots.forEach(function (dot, i) {
+                dot.addEventListener('click', function () {
+                    if (!isAnimating && i !== current) {
+                        isAnimating = true;
+                        updateCarousel(i);
+                        setTimeout(function () {
+                            isAnimating = false;
+                        }, 600);
+                    }
+                });
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'ArrowLeft') navigate(-1);
+                if (e.key === 'ArrowRight') navigate(1);
+            });
+
+            let touchStartX = 0;
+            const container = document.querySelector('.carousel-container');
+
+            container.addEventListener('touchstart', function (e) {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            container.addEventListener('touchend', function (e) {
+                const diff = touchStartX - e.changedTouches[0].screenX;
+                if (Math.abs(diff) > 50) {
+                    navigate(diff > 0 ? 1 : -1);
+                }
+            }, { passive: true });
+
+            let autoPlay;
+
+            function startAuto() {
+                autoPlay = setInterval(function () {
+                    navigate(1);
+                }, 5000);
+            }
+
+            function stopAuto() {
+                clearInterval(autoPlay);
+            }
+
+            container.addEventListener('mouseenter', stopAuto);
+            container.addEventListener('mouseleave', startAuto);
+
+            updateCarousel(current);
+            startAuto();
+
+        })();
+    </script>
+</body>
+</html>
