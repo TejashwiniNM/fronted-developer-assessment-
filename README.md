@@ -1,4 +1,4 @@
-# ICICI Frontend Internship Assignment
+#  Frontend Developer -  Assignment
 
 **Live Demo:** https://github.com/TejashwiniNM/fronted-developer-assessment-.git
 
